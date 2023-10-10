@@ -5,6 +5,7 @@ use crate::node::{ParentNode, RTreeNode};
 use crate::object::RTreeObject;
 use crate::params::RTreeParams;
 use crate::{Envelope, RTree};
+use alloc::boxed::Box;
 
 use alloc::{vec, vec::Vec};
 
@@ -52,7 +53,7 @@ where
             rtree.root_mut(),
             ParentNode {
                 children: vec![],
-                envelope: Envelope::new_empty(),
+                envelope: Box::new(Envelope::new_empty()),
             },
         );
         let original_size = replace(rtree.size_mut(), 0);
@@ -80,7 +81,7 @@ where
 
         // TODO: May be make this a method on `ParentNode`
         if num_removed > 0 {
-            node.envelope = crate::node::envelope_for_children(&node.children);
+            node.envelope = Box::new(crate::node::envelope_for_children(&node.children));
         }
 
         // If there is no parent, this is the new root node to set back in the rtree

@@ -4,6 +4,7 @@ use crate::object::RTreeObject;
 use crate::params::{InsertionStrategy, RTreeParams};
 use crate::point::{Point, PointExt};
 use crate::rtree::RTree;
+use alloc::boxed::Box;
 
 use alloc::vec::Vec;
 use num_traits::{Bounded, Zero};
@@ -60,7 +61,7 @@ impl InsertionStrategy for RStarInsertionStrategy {
                     let old_root = ::core::mem::replace(tree.root_mut(), new_root);
                     let new_envelope = old_root.envelope.merged(&node.envelope());
                     let root = tree.root_mut();
-                    root.envelope = new_envelope;
+                    root.envelope = Box::new(new_envelope);
                     root.children.push(RTreeNode::Parent(old_root));
                     root.children.push(node);
                     target_height += 1;
@@ -143,7 +144,7 @@ where
             resolve_overflow::<_, Params>(node, current_height)
         }
         InsertionResult::Reinsert(a, b) => {
-            node.envelope = envelope_for_children(&node.children);
+            node.envelope = Box::new(envelope_for_children(&node.children));
             InsertionResult::Reinsert(a, b)
         }
         other => other,
@@ -282,7 +283,7 @@ where
         }
     }
     let off_split = node.children.split_off(best_index);
-    node.envelope = envelope_for_children(&node.children);
+    node.envelope = Box::new(envelope_for_children(&node.children));
     RTreeNode::Parent(ParentNode::new_parent(off_split))
 }
 
@@ -348,6 +349,6 @@ where
     let result = node
         .children
         .split_off(num_children - Params::REINSERTION_COUNT);
-    node.envelope = envelope_for_children(&node.children);
+    node.envelope = Box::new(envelope_for_children(&node.children));
     result
 }

@@ -1,6 +1,7 @@
 use crate::envelope::Envelope;
 use crate::object::RTreeObject;
 use crate::params::RTreeParams;
+use alloc::boxed::Box;
 
 use alloc::vec::Vec;
 
@@ -41,7 +42,7 @@ where
     T: RTreeObject,
 {
     pub(crate) children: Vec<RTreeNode<T>>,
-    pub(crate) envelope: T::Envelope,
+    pub(crate) envelope: Box<T::Envelope>,
 }
 
 impl<T> RTreeObject for RTreeNode<T>
@@ -53,7 +54,7 @@ where
     fn envelope(&self) -> Self::Envelope {
         match self {
             RTreeNode::Leaf(ref t) => t.envelope(),
-            RTreeNode::Parent(ref data) => data.envelope.clone(),
+            RTreeNode::Parent(ref data) => *data.envelope.clone(),
         }
     }
 }
@@ -82,7 +83,7 @@ where
 
     /// Returns the smallest envelope that encompasses all children.
     pub fn envelope(&self) -> T::Envelope {
-        self.envelope.clone()
+        *self.envelope.clone()
     }
 
     pub(crate) fn new_root<Params>() -> Self
@@ -90,13 +91,13 @@ where
         Params: RTreeParams,
     {
         ParentNode {
-            envelope: Envelope::new_empty(),
+            envelope: Box::new(Envelope::new_empty()),
             children: Vec::with_capacity(Params::MAX_SIZE + 1),
         }
     }
 
     pub(crate) fn new_parent(children: Vec<RTreeNode<T>>) -> Self {
-        let envelope = envelope_for_children(&children);
+        let envelope = Box::new(envelope_for_children(&children));
 
         ParentNode { envelope, children }
     }
@@ -150,7 +151,7 @@ where
                 }
             }
         }
-        assert_eq!(self.envelope, envelope);
+        assert_eq!(*self.envelope, envelope);
     }
 }
 
@@ -167,33 +168,30 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::{ParentNode, RTreeNode};
     use core::mem::size_of;
-    use crate::{ParentNode, RTreeNode, RTreeObject};
 
     #[test]
     fn sizes() {
-        // 2 points that are each 4 floats
-        assert_eq!(64, size_of::<<[f64; 4] as RTreeObject>::Envelope>());
-
         {
             type Point = [f64; 2];
             assert_eq!(16, size_of::<Point>());
-            assert_eq!(56, size_of::<ParentNode<Point>>());
-            assert_eq!(56, size_of::<RTreeNode<Point>>());
+            assert_eq!(32, size_of::<ParentNode<Point>>());
+            assert_eq!(32, size_of::<RTreeNode<Point>>());
         }
 
         {
             type Point = [f64; 3];
             assert_eq!(24, size_of::<Point>());
-            assert_eq!(72, size_of::<ParentNode<Point>>());
-            assert_eq!(72, size_of::<RTreeNode<Point>>());
+            assert_eq!(32, size_of::<ParentNode<Point>>());
+            assert_eq!(32, size_of::<RTreeNode<Point>>());
         }
 
         {
             type Point = [f64; 4];
             assert_eq!(32, size_of::<Point>());
-            assert_eq!(88, size_of::<ParentNode<Point>>());
-            assert_eq!(88, size_of::<RTreeNode<Point>>());
+            assert_eq!(32, size_of::<ParentNode<Point>>());
+            assert_eq!(40, size_of::<RTreeNode<Point>>());
         }
     }
 }
