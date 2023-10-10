@@ -164,3 +164,36 @@ where
     }
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use core::mem::size_of;
+    use crate::{ParentNode, RTreeNode, RTreeObject};
+
+    #[test]
+    fn sizes() {
+        // 2 points that are each 4 floats
+        assert_eq!(64, size_of::<<[f64; 4] as RTreeObject>::Envelope>());
+
+        {
+            type Point = [f64; 2];
+            assert_eq!(16, size_of::<Point>());
+            assert_eq!(56, size_of::<ParentNode<Point>>());
+            assert_eq!(56, size_of::<RTreeNode<Point>>());
+        }
+
+        {
+            type Point = [f64; 3];
+            assert_eq!(24, size_of::<Point>());
+            assert_eq!(72, size_of::<ParentNode<Point>>());
+            assert_eq!(72, size_of::<RTreeNode<Point>>());
+        }
+
+        {
+            type Point = [f64; 4];
+            assert_eq!(32, size_of::<Point>());
+            assert_eq!(88, size_of::<ParentNode<Point>>());
+            assert_eq!(88, size_of::<RTreeNode<Point>>());
+        }
+    }
+}
