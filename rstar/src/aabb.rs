@@ -252,6 +252,7 @@ mod test {
     use super::AABB;
     use crate::envelope::Envelope;
     use crate::object::PointDistance;
+    use crate::RTree;
 
     #[test]
     fn empty_rect() {
@@ -300,5 +301,29 @@ mod test {
 
         let not_empty = AABB::from_corners([1.0, 1.0], [1.0, 1.0]);
         assert!(!not_empty.is_empty());
+    }
+
+    #[test]
+    fn rtree_operations_with_nan_do_not_panic() {
+        let mut points: Vec<_> = (0..64).map(|value| [value as f64, value as f64]).collect();
+        points[16][0] = f64::NAN;
+
+        let tree = RTree::bulk_load(points.clone());
+        assert_eq!(tree.size(), points.len());
+        assert_eq!(
+            tree.nearest_neighbor_iter([f64::NAN, 0.0]).count(),
+            points.len()
+        );
+
+        let mut tree = RTree::new();
+        for point in &points {
+            tree.insert(*point);
+        }
+
+        assert_eq!(tree.size(), points.len());
+        assert_eq!(
+            tree.nearest_neighbor_iter([f64::NAN, 0.0]).count(),
+            points.len()
+        );
     }
 }
