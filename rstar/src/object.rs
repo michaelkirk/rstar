@@ -23,8 +23,8 @@ pub(crate) type Distance<T: PointDistance> = <<T::Envelope as Envelope>::Point a
 /// an r-tree.
 ///
 /// # NaN coordinates
-/// An object's envelope must not contain `NaN` coordinates. Behavior of r-tree
-/// operations involving `NaN` coordinates is undefined.
+/// An object's envelope must not contain `NaN` coordinates. Operations involving `NaN`
+/// coordinates may return incorrect or arbitrary results, but will not panic.
 ///
 /// # Type parameters
 /// `Envelope`: The object's envelope type. At the moment, only [AABB] is

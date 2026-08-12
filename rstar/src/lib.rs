@@ -10,8 +10,8 @@
 //! for example points, lines and rectangles in any dimension.
 //!
 //! # NaN coordinates
-//! Geometries and query points must not contain `NaN` coordinates. Behavior of r-tree
-//! operations involving `NaN` coordinates is undefined.
+//! Geometries and query points must not contain `NaN` coordinates. Operations involving `NaN`
+//! coordinates may return incorrect or arbitrary results, but will not panic.
 //!
 //!
 //! # Further documentation
