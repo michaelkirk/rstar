@@ -9,6 +9,10 @@
 //! _Spatial data_ refers to an object that has the notion of a position and extent:
 //! for example points, lines and rectangles in any dimension.
 //!
+//! # NaN coordinates
+//! Geometries and query points must not contain `NaN` coordinates. Behavior of r-tree
+//! operations involving `NaN` coordinates is undefined.
+//!
 //!
 //! # Further documentation
 //! The crate's main data structure and documentation is the [RTree] struct.

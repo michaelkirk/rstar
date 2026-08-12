@@ -21,12 +21,14 @@
 - Fix Clippy warning (surfaced in Rust 1.89) related to lifetime elision
 - MSRV is now 1.85 (released on 2025-02-20 and shipped in Debian Trixie)
 - Fix incorrect assertion message in `verify_parameters` of `rstar/src/params.rs`
+- Envelope no longer panics on NaN inputs. Ordering now follows f64::total_cmp semantics. Note: behavior is not defined for NaN values, but it no longer panics.
 
 
 # 0.12.2
 
 ## Changed
 - Reverted the change to `AABB::new_empty` while still avoiding overflow panics applying selections on empty trees ([PR](https://github.com/georust/rstar/pull/184))
+
 
 # 0.12.1 **YANKED**
 

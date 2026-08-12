@@ -99,6 +99,60 @@ pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {
 
 impl<S> RTreeNum for S where S: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
+/// Like `f64::total_cmp` but for all RTreeNum (including integers)
+pub(crate) fn total_cmp<S: RTreeNum>(left: S, right: S) -> core::cmp::Ordering {
+    match left.partial_cmp(&right) {
+        Some(ordering) => ordering,
+        // NaN is unordered even with itself, so sort NaN-like values after
+        // ordered values and group them together.
+        None => match (
+            left.partial_cmp(&left).is_none(),
+            right.partial_cmp(&right).is_none(),
+        ) {
+            (true, false) => core::cmp::Ordering::Greater,
+            (false, true) => core::cmp::Ordering::Less,
+            _ => core::cmp::Ordering::Equal,
+        },
+    }
+}
+
+#[cfg(test)]
+mod rtree_num_tests {
+    use super::{total_cmp, RTreeNum};
+    use core::cmp::Ordering;
+
+    fn assert_matches_intrinsic_total_cmp<S: RTreeNum + core::fmt::Debug>(
+        values: &[S],
+        intrinsic_total_cmp: impl Fn(&S, &S) -> Ordering,
+    ) {
+        for left in values {
+            for right in values {
+                assert_eq!(
+                    total_cmp(*left, *right),
+                    intrinsic_total_cmp(left, right),
+                    "unexpected ordering for {left:?} and {right:?}",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn total_cmp_matches_f32_intrinsic() {
+        assert_matches_intrinsic_total_cmp(
+            &[f32::NEG_INFINITY, -1.0, 0.0, 1.0, f32::INFINITY, f32::NAN],
+            f32::total_cmp,
+        );
+    }
+
+    #[test]
+    fn total_cmp_matches_f64_intrinsic() {
+        assert_matches_intrinsic_total_cmp(
+            &[f64::NEG_INFINITY, -1.0, 0.0, 1.0, f64::INFINITY, f64::NAN],
+            f64::total_cmp,
+        );
+    }
+}
+
 /// Defines a point type that is compatible with rstar.
 ///
 /// This trait should be used for interoperability with other point types, not to define custom objects
