@@ -1,4 +1,4 @@
-use crate::point::{max_inline, total_cmp, Point, PointExt};
+use crate::point::{max_inline, Point, PointExt, RTreeCmp};
 use crate::{Envelope, RTreeObject};
 use num_traits::{Bounded, One, Zero};
 
@@ -224,7 +224,10 @@ where
 
     fn sort_envelopes<T: RTreeObject<Envelope = Self>>(axis: usize, envelopes: &mut [T]) {
         envelopes.sort_unstable_by(|l, r| {
-            total_cmp(l.envelope().lower.nth(axis), r.envelope().lower.nth(axis))
+            l.envelope()
+                .lower
+                .nth(axis)
+                .total_cmp(r.envelope().lower.nth(axis))
         });
     }
 
@@ -234,7 +237,10 @@ where
         selection_size: usize,
     ) {
         envelopes.select_nth_unstable_by(selection_size, |l, r| {
-            total_cmp(l.envelope().lower.nth(axis), r.envelope().lower.nth(axis))
+            l.envelope()
+                .lower
+                .nth(axis)
+                .total_cmp(r.envelope().lower.nth(axis))
         });
     }
 }
