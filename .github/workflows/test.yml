@@ -49,6 +49,24 @@ jobs:
       - name: Lint using Clippy
         run: cargo clippy --workspace --exclude rstar-demo --tests
 
+  check_aux:
+    # Informational only: these crates aren't published, and their dependencies
+    # break more often than we care to fix. Deliberately excluded from the
+    # `conclusion` job, so a failure here won't block merging.
+    name: Check bench and demo crates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: check-aux
+      - name: Check bench and demo crates
+        run: cargo check --package rstar-benches --package rstar-demo --all-targets
+
   msrv:
     name: MSRV build
     runs-on: ubuntu-latest
