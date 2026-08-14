@@ -3,56 +3,6 @@ use core::fmt::Debug;
 use core::num::Wrapping;
 use num_traits::{Bounded, Num, Signed, Zero};
 
-/// Defines a total ordering for a number type used by rstar.
-///
-/// `f32` and `f64` use their intrinsic [`total_cmp`](f64::total_cmp)
-/// implementations. Implement this trait for custom scalar types to define
-/// their ordering in r-tree operations.
-pub trait RTreeCmp {
-    /// Compares two values using a total ordering.
-    fn total_cmp(self, other: Self) -> Ordering;
-}
-
-impl RTreeCmp for f32 {
-    #[inline]
-    fn total_cmp(self, other: Self) -> Ordering {
-        f32::total_cmp(&self, &other)
-    }
-}
-
-impl RTreeCmp for f64 {
-    #[inline]
-    fn total_cmp(self, other: Self) -> Ordering {
-        f64::total_cmp(&self, &other)
-    }
-}
-
-macro_rules! impl_rtree_cmp_for_ord {
-    ($($type:ty),+ $(,)?) => {
-        $(
-            impl RTreeCmp for $type {
-                #[inline]
-                fn total_cmp(self, other: Self) -> Ordering {
-                    Ord::cmp(&self, &other)
-                }
-            }
-        )+
-    };
-}
-
-// Keep this list in sync with `tests::test_types`, which asserts these types implement `RTreeNum`.
-impl_rtree_cmp_for_ord!(i8, i16, i32, i64, i128, isize);
-
-impl<T> RTreeCmp for Wrapping<T>
-where
-    T: RTreeCmp,
-{
-    #[inline]
-    fn total_cmp(self, other: Self) -> Ordering {
-        self.0.total_cmp(other.0)
-    }
-}
-
 /// Defines a number type that is compatible with rstar.
 ///
 /// rstar works out of the box with the following standard library types:
@@ -60,16 +10,16 @@ where
 ///  - [Wrapping](core::num::Wrapping) versions of the above
 ///  - f32, f64
 ///
-/// For custom number types, implement [`RTreeCmp`] in addition to the required
-/// traits from the `num_traits` crate. The blanket implementation below then
-/// makes the type implement `RTreeNum`.
+/// `f32` and `f64` use their intrinsic [`total_cmp`](f64::total_cmp)
+/// implementations. For custom scalar types, implement this trait to define
+/// their ordering in r-tree operations.
 ///
 /// # Example
 /// ```
 /// # extern crate num_traits;
 /// use core::cmp::Ordering;
 /// use num_traits::{Bounded, Num, Signed};
-/// use rstar::RTreeCmp;
+/// use rstar::RTreeNum;
 ///
 /// #[derive(Clone, Copy, PartialEq, PartialOrd, Debug)]
 /// struct MyFancyNumberType(f32);
@@ -100,10 +50,9 @@ where
 /// # fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr> { unimplemented!() }
 /// }
 ///
-/// impl RTreeCmp for MyFancyNumberType {
-///   fn total_cmp(self, other: Self) -> Ordering {
-///     f32::total_cmp(&self.0, &other.0)
-///   }
+/// impl RTreeNum for MyFancyNumberType {
+///   // ... details hidden ...
+/// # fn total_cmp(self, other: Self) -> Ordering { unimplemented!() }
 /// }
 ///
 /// // Lots of traits are still missing to make the above code compile, but
@@ -156,14 +105,55 @@ where
 /// #
 /// ```
 ///
-pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug + RTreeCmp {}
+pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {
+    /// Compares two values using a total ordering.
+    fn total_cmp(self, other: Self) -> Ordering;
+}
 
-impl<S> RTreeNum for S where S: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug + RTreeCmp
-{}
+impl RTreeNum for f32 {
+    #[inline]
+    fn total_cmp(self, other: Self) -> Ordering {
+        f32::total_cmp(&self, &other)
+    }
+}
+
+impl RTreeNum for f64 {
+    #[inline]
+    fn total_cmp(self, other: Self) -> Ordering {
+        f64::total_cmp(&self, &other)
+    }
+}
+
+macro_rules! impl_rtree_num_for_ord {
+    ($($type:ty),+ $(,)?) => {
+        $(
+            impl RTreeNum for $type {
+                #[inline]
+                fn total_cmp(self, other: Self) -> Ordering {
+                    Ord::cmp(&self, &other)
+                }
+            }
+        )+
+    };
+}
+
+// Keep this list in sync with `tests::test_types`, which asserts these types implement `RTreeNum`.
+impl_rtree_num_for_ord!(i8, i16, i32, i64, i128, isize);
+
+impl<T> RTreeNum for Wrapping<T>
+where
+    T: RTreeNum,
+    Wrapping<T>: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug,
+{
+    #[inline]
+    fn total_cmp(self, other: Self) -> Ordering {
+        self.0.total_cmp(other.0)
+    }
+}
 
 #[cfg(test)]
 mod rtree_num_tests {
-    use super::{RTreeCmp, RTreeNum};
+    use super::RTreeNum;
     use core::cmp::Ordering;
 
     fn assert_matches_intrinsic_total_cmp<S: RTreeNum + core::fmt::Debug>(
@@ -173,7 +163,7 @@ mod rtree_num_tests {
         for left in values {
             for right in values {
                 assert_eq!(
-                    RTreeCmp::total_cmp(*left, *right),
+                    RTreeNum::total_cmp(*left, *right),
                     intrinsic_total_cmp(left, right),
                     "unexpected ordering for {left:?} and {right:?}",
                 );

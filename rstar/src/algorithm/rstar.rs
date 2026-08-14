@@ -1,7 +1,7 @@
 use crate::node::{envelope_for_children, ParentNode, RTreeNode};
 use crate::object::RTreeObject;
 use crate::params::{InsertionStrategy, RTreeParams};
-use crate::point::{Point, PointExt, RTreeCmp};
+use crate::point::{Point, PointExt, RTreeNum};
 use crate::rtree::RTree;
 use crate::{envelope::Envelope, object::Distance};
 

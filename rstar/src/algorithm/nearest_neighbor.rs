@@ -1,4 +1,4 @@
-use crate::point::{min_inline, RTreeCmp};
+use crate::point::{min_inline, RTreeNum};
 use crate::{
     node::{ParentNode, RTreeNode},
     object::Distance,
