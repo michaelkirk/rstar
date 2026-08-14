@@ -1,5 +1,14 @@
 # Unreleased
 
+## Changed
+
+- **BREAKING** `RTreeNum` no longer has a blanket implementation. Common numeric types still work, now via a manual implementation.
+  If you are using an exotic numeric type, you will need a manual `impl RTreeNum for YourExoticType`. ([PR](https://github.com/georust/rstar/pull/237))
+
+## Fixed
+
+- Envelopes no longer panic on `NaN` inputs. Ordering follows `f64::total_cmp` semantics; results involving `NaN` may be incorrect or arbitrary. ([PR](https://github.com/georust/rstar/pull/237))
+
 
 # 0.13.0
 
@@ -21,7 +30,6 @@
 - Fix Clippy warning (surfaced in Rust 1.89) related to lifetime elision
 - MSRV is now 1.85 (released on 2025-02-20 and shipped in Debian Trixie)
 - Fix incorrect assertion message in `verify_parameters` of `rstar/src/params.rs`
-- Envelopes no longer panic on `NaN` inputs. Ordering follows `f64::total_cmp` semantics; results involving `NaN` may be incorrect or arbitrary.
 
 
 # 0.12.2
