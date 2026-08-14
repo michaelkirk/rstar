@@ -1,5 +1,6 @@
 use crate::object::PointDistance;
 use crate::object::RTreeObject;
+use crate::point::RTreeNum;
 use crate::{envelope::Envelope, object::Distance};
 
 /// Advanced trait to iterate through an r-tree. Usually it should not be required to be implemented.
@@ -197,7 +198,9 @@ where
 {
     fn should_unpack_parent(&self, parent_envelope: &T::Envelope) -> bool {
         let envelope_distance = parent_envelope.distance_2(&self.circle_origin);
-        envelope_distance <= self.squared_max_distance
+        envelope_distance
+            .total_cmp(self.squared_max_distance)
+            .is_le()
     }
 
     fn should_unpack_leaf(&self, leaf: &T) -> bool {

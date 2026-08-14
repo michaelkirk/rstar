@@ -17,7 +17,6 @@ use num_traits::{Bounded, Num, Signed, Zero};
 /// # Example
 /// ```
 /// # extern crate num_traits;
-/// use core::cmp::Ordering;
 /// use num_traits::{Bounded, Num, Signed};
 /// use rstar::RTreeNum;
 ///
@@ -52,7 +51,7 @@ use num_traits::{Bounded, Num, Signed, Zero};
 ///
 /// impl RTreeNum for MyFancyNumberType {
 ///   // ... details hidden ...
-/// # fn total_cmp(self, other: Self) -> Ordering { unimplemented!() }
+/// # fn total_cmp(self, other: Self) -> core::cmp::Ordering { self.0.total_cmp(other.0) }
 /// }
 ///
 /// // Lots of traits are still missing to make the above code compile, but
@@ -105,7 +104,7 @@ use num_traits::{Bounded, Num, Signed, Zero};
 /// #
 /// ```
 ///
-pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {
+pub trait RTreeNum: Bounded + Num + Clone + Copy + Signed + Debug {
     /// Compares two values using a total ordering.
     fn total_cmp(self, other: Self) -> Ordering;
 }
@@ -143,7 +142,7 @@ impl_rtree_num_for_ord!(i8, i16, i32, i64, i128, isize);
 impl<T> RTreeNum for Wrapping<T>
 where
     T: RTreeNum,
-    Wrapping<T>: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug,
+    Wrapping<T>: Bounded + Num + Clone + Copy + Signed + Debug,
 {
     #[inline]
     fn total_cmp(self, other: Self) -> Ordering {
@@ -362,7 +361,7 @@ pub fn min_inline<S>(a: S, b: S) -> S
 where
     S: RTreeNum,
 {
-    if a < b {
+    if a.total_cmp(b).is_lt() {
         a
     } else {
         b
@@ -374,7 +373,7 @@ pub fn max_inline<S>(a: S, b: S) -> S
 where
     S: RTreeNum,
 {
-    if a > b {
+    if a.total_cmp(b).is_gt() {
         a
     } else {
         b

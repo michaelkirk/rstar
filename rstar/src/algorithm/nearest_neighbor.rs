@@ -248,7 +248,7 @@ where
             let distance_if_less_or_equal = match child {
                 RTreeNode::Parent(ref data) => {
                     let distance = data.envelope.distance_2(query_point);
-                    if distance <= *min_max_distance {
+                    if distance.total_cmp(*min_max_distance).is_le() {
                         Some(distance)
                     } else {
                         None

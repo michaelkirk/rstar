@@ -170,7 +170,7 @@ where
         if envelope.contains_envelope(&insertion_envelope) {
             inclusion_count += 1;
             let area = envelope.area();
-            if area < min_area {
+            if area.total_cmp(min_area).is_lt() {
                 min_area = area;
                 min_index = index;
             }
@@ -206,7 +206,13 @@ where
             let area = new_envelope.area();
             let area_increase = area - envelope.area();
             let new_min = (overlap_increase, area_increase, area);
-            if new_min < min || index1 == 0 {
+            let is_better = new_min
+                .0
+                .total_cmp(min.0)
+                .then_with(|| new_min.1.total_cmp(min.1))
+                .then_with(|| new_min.2.total_cmp(min.2))
+                .is_lt();
+            if is_better || index1 == 0 {
                 min = new_min;
                 min_index = index1;
             }
@@ -272,7 +278,12 @@ where
         let overlap_value = first_envelope.intersection_area(&second_envelope);
         let area_value = first_envelope.area() + second_envelope.area();
         let new_best = (overlap_value, area_value);
-        if new_best < best || k == min_size {
+        let is_better = new_best
+            .0
+            .total_cmp(best.0)
+            .then_with(|| new_best.1.total_cmp(best.1))
+            .is_lt();
+        if is_better || k == min_size {
             best = new_best;
             best_index = k;
         }
@@ -315,7 +326,7 @@ where
 
             let perimeter_value =
                 first_modified.perimeter_value() + second_modified.perimeter_value();
-            if best_goodness > perimeter_value {
+            if best_goodness.total_cmp(perimeter_value).is_gt() {
                 best_axis = axis;
                 best_goodness = perimeter_value;
             }

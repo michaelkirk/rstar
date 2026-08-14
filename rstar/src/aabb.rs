@@ -134,17 +134,23 @@ where
     }
 
     fn is_empty(&self) -> bool {
-        self.lower.nth(0) > self.upper.nth(0)
+        self.lower.nth(0).total_cmp(self.upper.nth(0)).is_gt()
     }
 
     fn contains_point(&self, point: &P) -> bool {
-        self.lower.all_component_wise(point, |x, y| x <= y)
-            && self.upper.all_component_wise(point, |x, y| x >= y)
+        self.lower
+            .all_component_wise(point, |x, y| x.total_cmp(y).is_le())
+            && self
+                .upper
+                .all_component_wise(point, |x, y| x.total_cmp(y).is_ge())
     }
 
     fn contains_envelope(&self, other: &Self) -> bool {
-        self.lower.all_component_wise(&other.lower, |l, r| l <= r)
-            && self.upper.all_component_wise(&other.upper, |l, r| l >= r)
+        self.lower
+            .all_component_wise(&other.lower, |l, r| l.total_cmp(r).is_le())
+            && self
+                .upper
+                .all_component_wise(&other.upper, |l, r| l.total_cmp(r).is_ge())
     }
 
     fn merge(&mut self, other: &Self) {
@@ -160,8 +166,11 @@ where
     }
 
     fn intersects(&self, other: &Self) -> bool {
-        self.lower.all_component_wise(&other.upper, |l, r| l <= r)
-            && self.upper.all_component_wise(&other.lower, |l, r| l >= r)
+        self.lower
+            .all_component_wise(&other.upper, |l, r| l.total_cmp(r).is_le())
+            && self
+                .upper
+                .all_component_wise(&other.lower, |l, r| l.total_cmp(r).is_ge())
     }
 
     fn area(&self) -> P::Scalar {
@@ -186,14 +195,14 @@ where
             let mut max = u.nth(i);
             max = max * max;
             min = min * min;
-            if max < min {
+            if max.total_cmp(min).is_lt() {
                 core::mem::swap(&mut min, &mut max);
             }
 
             let diff = max - min;
             *result.nth_mut(i) = max;
 
-            if diff >= max_diff.0 {
+            if diff.total_cmp(max_diff.0).is_ge() {
                 max_diff = (diff, min, i);
             }
         }

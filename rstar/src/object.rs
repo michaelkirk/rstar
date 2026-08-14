@@ -3,7 +3,7 @@ use alloc::sync::Arc;
 
 use crate::aabb::AABB;
 use crate::envelope::Envelope;
-use crate::point::{Point, PointExt};
+use crate::point::{Point, PointExt, RTreeNum};
 
 /// Type alias for distance scalar types derived from `PointDistance` objects
 #[allow(type_alias_bounds)]
@@ -171,7 +171,7 @@ pub trait PointDistance: RTreeObject {
     /// contained within `self`. Changing this default behavior is advised if calculating the squared distance
     /// is more computationally expensive than a point containment check.
     fn contains_point(&self, point: &<Self::Envelope as Envelope>::Point) -> bool {
-        self.distance_2(point) <= num_traits::zero()
+        self.distance_2(point).total_cmp(num_traits::zero()).is_le()
     }
 
     /// Returns the squared distance to this object, or `None` if the distance
@@ -193,9 +193,9 @@ pub trait PointDistance: RTreeObject {
         max_distance_2: Distance<Self>,
     ) -> Option<Distance<Self>> {
         let envelope_distance = self.envelope().distance_2(point);
-        if envelope_distance <= max_distance_2 {
+        if envelope_distance.total_cmp(max_distance_2).is_le() {
             let distance_2 = self.distance_2(point);
-            if distance_2 <= max_distance_2 {
+            if distance_2.total_cmp(max_distance_2).is_le() {
                 return Some(distance_2);
             }
         }
@@ -232,7 +232,7 @@ where
         max_distance_2: Distance<Self>,
     ) -> Option<P::Scalar> {
         let distance_2 = <Self as PointExt>::distance_2(self, point);
-        if distance_2 <= max_distance_2 {
+        if distance_2.total_cmp(max_distance_2).is_le() {
             Some(distance_2)
         } else {
             None
